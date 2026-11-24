@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Rider2Wheel — Test selector motociclete</title>
+  <style>
+    :root{--navy:#0b2038;--blue:#087cf0;--ink:#eaf3ff;--mute:#afc3d8;--line:#2c4963;--surface:#132c47;--canvas:#071524;--warn:#f9d388}
+    *{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--canvas);color:var(--ink)}
+    .wrap{max-width:1010px;margin:0 auto;padding:32px 20px 64px}.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-style:italic;letter-spacing:1px;font-size:24px}
+    .brand span{color:var(--blue)}.tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#89c0ff;font-weight:700;margin-top:36px}
+    h1{font-size:clamp(26px,4vw,43px);line-height:1.12;margin:9px 0 12px}p{color:var(--mute);margin:0 0 20px}
+    .panel{margin-top:24px;border:1px solid var(--line);border-radius:20px;background:var(--navy);padding:28px;box-shadow:0 15px 36px #0004}
+    .heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.kicker{font-size:12px;color:#94bff4;text-transform:uppercase;font-weight:700;letter-spacing:.07em}
+    .pill{border-radius:999px;background:#173653;color:#cde3ff;border:1px solid #406082;padding:6px 11px;font-size:12px}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}.field{min-width:0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+    .field select,.field input{display:block;width:100%;height:48px;border:1px solid #acc3d8;background:#fff;color:#10263d;border-radius:8px;font-size:15px;padding:0 12px}
+    .field select:disabled,.field input:disabled{background:#b5c1cf;color:#425166;cursor:not-allowed}
+    .hint{font-size:12px;color:var(--mute);margin-top:7px;min-height:1.3em}.wide{grid-column:1 / -1}
+    .actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:22px}.primary{font:inherit;font-weight:700;background:var(--blue);color:#fff;border:0;border-radius:8px;padding:13px 20px;cursor:pointer}
+    .primary:disabled{background:#516985;color:#c1cbd8;cursor:not-allowed}.secondary{font:inherit;background:transparent;color:#e5f3ff;border:1px solid var(--line);border-radius:8px;padding:12px 18px;cursor:pointer}
+    .message{margin-top:18px;padding:12px 15px;border-radius:9px;background:var(--surface);color:var(--mute);border:1px solid var(--line);font-size:14px}
+    .warning{color:var(--warn)}.result{margin-top:22px;border-radius:12px;border:1px solid #3483cd;background:#122f50;padding:18px;display:none}
+    .result strong{display:block;font-size:20px;margin-bottom:6px}.result small{color:var(--mute)}.foot{margin-top:22px;color:var(--mute);font-size:12px}
+    a{color:#9bc9ff}a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #ffdb73;outline-offset:3px}
+    @media(max-width:640px){.fields{grid-template-columns:1fr}.panel{padding:18px}.wide{grid-column:auto}.wrap{padding:20px 13px 35px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand" aria-label="Rider2Wheel">RIDER<span>2</span>WHEEL</div>
+  <div class="tag">Prototype de test · baza moto v1</div>
+  <h1>Alege motocicleta ta</h1>
+  <p>Selector independent de MerchantPro, alimentat automat din fișierele JSON publicate în GitHub Pages.</p>
+  <section class="panel" aria-labelledby="form-title">
+    <div class="heading">
+      <div><div class="kicker">Identificare motocicletă</div><h2 id="form-title" style="margin:4px 0 0;font-size:22px">Marcă → Familie → Model → Versiune → An</h2></div>
+      <div id="counts" class="pill" aria-live="polite">Se încarcă baza moto…</div>
+    </div>
+    <div class="fields">
+      <div class="field"><label for="brand">1. Marcă</label><select id="brand" disabled><option>Se încarcă…</option></select></div>
+      <div class="field"><label for="family">2. Familie</label><select id="family" disabled><option>Alege întâi marca</option></select><div class="hint">Familiile sunt propuneri automate, încă în revizuire.</div></div>
+      <div class="field"><label for="model">3. Model exact</label><select id="model" disabled><option>Alege întâi familia</option></select></div>
+      <div class="field"><label for="variant">4. Versiune / generație</label><select id="variant" disabled><option>Alege întâi modelul</option></select><div id="variantHint" class="hint"></div></div>
+      <div class="field wide" id="yearField"><label for="year">5. An fabricație</label><select id="year" disabled><option>Alege întâi versiunea</option></select><input id="yearManual" type="number" min="1900" max="2027" inputmode="numeric" placeholder="Introdu anul din acte" style="display:none" disabled><div id="yearHint" class="hint">Anii disponibili sunt completați doar acolo unde există informații în bază.</div></div>
+    </div>
+    <div class="actions"><button id="confirm" class="primary" disabled>Confirmă selecția</button><button id="reset" class="secondary" type="button">Resetează</button></div>
+    <div class="message" id="message" role="status">Datele sunt în curs de încărcare.</div>
+    <div class="result" id="result" role="status"><strong id="resultTitle"></strong><div id="resultDesc"></div><small>Selecția motocicletei NU certifică automat compatibilitatea pieselor. Verificarea după VIN și asocierea cu produse se vor integra ulterior.</small></div>
+  </section>
+  <div class="foot">Sursa: <a href="./01_Marci.json">Mărci</a> · <a href="./02_Familii.json">Familii</a> · <a href="./03_Modele.json">Modele</a> · <a href="./04_Variante.json">Variante</a>. Această pagină este doar pentru testare și nu modifică magazinul.</div>
+</main>
+<script>
+(()=>{
+  'use strict';
+  const q=id=>document.getElementById(id);
+  const el={brand:q('brand'),family:q('family'),model:q('model'),variant:q('variant'),year:q('year'),yearManual:q('yearManual'),yearHint:q('yearHint'),variantHint:q('variantHint'),confirm:q('confirm'),message:q('message'),counts:q('counts'),result:q('result'),resultTitle:q('resultTitle'),resultDesc:q('resultDesc')};
+  let db;
+  const sort=(a,b)=>a.localeCompare(b,'ro',{numeric:true,sensitivity:'base'});
+  const setMessage=(msg,isWarning=false)=>{el.message.textContent=msg;el.message.classList.toggle('warning',isWarning)};
+  function resetSelect(node,prompt){node.replaceChildren(new Option(prompt,''));node.disabled=true;node.value='';}
+  function fillSelect(node,items,prompt,getValue,getLabel){
+    resetSelect(node,prompt);
+    for(const item of items){node.add(new Option(getLabel(item),getValue(item)));}
+    node.disabled=items.length===0;
+  }
+  function clearResult(){el.result.style.display='none';el.confirm.disabled=true;}
+  function familyChange(){
+    clearResult();resetSelect(el.model,'Alege întâi familia');modelChange();
+    if(!db||!el.family.value)return;
+    const items=db.models.filter(x=>x.Familie_ID===el.family.value).sort((a,b)=>sort(a.Model_din_sursa,b.Model_din_sursa));
+    fillSelect(el.model,items,'Selectează modelul',x=>x.Model_ID,x=>x.Model_din_sursa);
+    setMessage(items.length+' modele disponibile în familia aleasă.');
+  }
+  function brandChange(){
+    clearResult();resetSelect(el.family,'Alege întâi marca');familyChange();
+    if(!db||!el.brand.value)return;
+    const items=db.families.filter(x=>x.Marca_ID===el.brand.value).sort((a,b)=>sort(a.Familie_propusa,b.Familie_propusa));
+    fillSelect(el.family,items,'Selectează familia',x=>x.Familie_ID,x=>x.Familie_propusa);
+    setMessage(items.length+' familii propuse pentru marca selectată.');
+  }
+  function variantChange(){
+    clearResult();resetSelect(el.year,'Alege întâi versiunea');
+    el.year.style.display='block';el.yearManual.style.display='none';el.yearManual.disabled=true;el.yearManual.value='';el.yearHint.textContent='Anii disponibili sunt completați doar acolo unde există informații în bază.';
+    if(!db||!el.variant.value)return;
+    const v=db.variants.find(x=>x.Varianta_ID===el.variant.value);
+    if(!v)return;
+    const from=Number(v.An_de_la),to=Number(v.An_pana);
+    if(v.An_de_la&&v.An_pana&&Number.isInteger(from)&&Number.isInteger(to)&&from>=1900&&to>=from&&to-from<=100){
+      const years=[];for(let year=to;year>=from;year--)years.push(year);
+      fillSelect(el.year,years,'Selectează anul',x=>String(x),x=>String(x));
+      el.yearHint.textContent='Ani disponibili în baza v1: '+from+'–'+to+'. Interval de verificat pentru piața și versiunea exactă.';
+    }else{
+      el.year.style.display='none';el.yearManual.style.display='block';el.yearManual.disabled=false;
+      el.yearHint.textContent='Intervalul de fabricație lipsește din bază. Introdu manual anul din documente; sistemul nu îl poate valida tehnic.';
+    }
+    updateConfirmation();
+  }
+  function modelChange(){
+    clearResult();resetSelect(el.variant,'Alege întâi modelul');el.variantHint.textContent='';variantChange();
+    if(!db||!el.model.value)return;
+    const items=db.variants.filter(x=>x.Model_ID===el.model.value);
+    const label=x=>{
+      const gen=x.Generatie_neconfirmata||'Generație neprecizată';
+      const years=x.An_de_la&&x.An_pana?' ('+x.An_de_la+'–'+x.An_pana+')':'';
+      const cc=x.Cilindree_cm3?' · '+x.Cilindree_cm3+' cm³':'';
+      return gen+years+cc;
+    };
+    fillSelect(el.variant,items,items.length===1?'Versiune unică în baza v1':'Selectează generația / varianta',x=>x.Varianta_ID,label);
+    if(items.length===1){el.variant.value=items[0].Varianta_ID;variantChange();}
+    el.variantHint.textContent=items.length===1?'O singură variantă înregistrată; poate necesita diferențiere pe generații.':items.length+' variante înregistrate; selectează varianta corespunzătoare.';
+    setMessage('Alege varianta și anul pentru a continua.');
+  }
+  function selectedYear(){return el.year.style.display==='none'?el.yearManual.value:el.year.value;}
+  function updateConfirmation(){
+    const y=Number(selectedYear());
+    el.confirm.disabled=!(el.brand.value&&el.family.value&&el.model.value&&el.variant.value&&Number.isInteger(y)&&y>=1900&&y<=2027);
+  }
+  el.brand.addEventListener('change',brandChange);
+  el.family.addEventListener('change',familyChange);
+  el.model.addEventListener('change',modelChange);
+  el.variant.addEventListener('change',variantChange);
+  el.year.addEventListener('change',updateConfirmation);
+  el.yearManual.addEventListener('input',updateConfirmation);
+  q('reset').addEventListener('click',()=>{
+    if(!db)return;el.brand.value='';brandChange();setMessage('Selectează marca pentru a începe.');
+  });
+  el.confirm.addEventListener('click',()=>{
+    if(el.confirm.disabled||!db)return;
+    const brand=db.brands.find(x=>x.Marca_ID===el.brand.value);
+    const family=db.families.find(x=>x.Familie_ID===el.family.value);
+    const model=db.models.find(x=>x.Model_ID===el.model.value);
+    const variant=db.variants.find(x=>x.Varianta_ID===el.variant.value);
+    if(!brand||!family||!model||!variant)return;
+    const cc=variant.Cilindree_cm3 ? String(variant.Cilindree_cm3).replace('.',',')+' cm³' : 'cilindree neconfirmată';
+    el.resultTitle.textContent=brand.Marca+' '+model.Model_din_sursa+' · '+selectedYear();
+    el.resultDesc.textContent='Familie propusă: '+family.Familie_propusa+' · '+cc+'. ';
+    el.result.style.display='block';
+    setMessage('Motocicleta a fost selectată pentru demonstrație. Nu s-a efectuat o căutare de piese.');
+  });
+  async function load(){
+    try{
+      const files=['01_Marci.json','02_Familii.json','03_Modele.json','04_Variante.json'];
+      const data=await Promise.all(files.map(async filename=>{
+        const r=await fetch(new URL(filename,location.href),{cache:'no-cache'});
+        if(!r.ok)throw new Error(filename+' a răspuns cu HTTP '+r.status);
+        const rows=await r.json();if(!Array.isArray(rows))throw new Error(filename+' nu conține o listă JSON');return rows;
+      }));
+      db={brands:data[0],families:data[1],models:data[2],variants:data[3]};
+      const brandIds=new Set(db.brands.map(x=>x.Marca_ID));
+      const familyIds=new Set(db.families.map(x=>x.Familie_ID));
+      const modelIds=new Set(db.models.map(x=>x.Model_ID));
+      if(db.families.some(x=>!brandIds.has(x.Marca_ID))||db.models.some(x=>!familyIds.has(x.Familie_ID)||!brandIds.has(x.Marca_ID))||db.variants.some(x=>!modelIds.has(x.Model_ID)))throw new Error('Există legături lipsă între fișierele JSON');
+      fillSelect(el.brand,db.brands.slice().sort((a,b)=>sort(a.Marca,b.Marca)),'Selectează marca',x=>x.Marca_ID,x=>x.Marca);
+      el.counts.textContent=db.brands.length+' mărci · '+db.models.length+' modele';
+      setMessage('Baza încărcată cu succes. Selectează o marcă pentru a începe.');
+    }catch(err){
+      el.counts.textContent='Eroare la încărcare';
+      setMessage('Nu s-a putut încărca baza moto: '+(err&&err.message?err.message:String(err))+'. Pagina trebuie găzduită în același folder cu fișierele JSON.',true);
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>
